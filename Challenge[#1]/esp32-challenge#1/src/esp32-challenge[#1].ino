@@ -60,7 +60,7 @@ void setup() {
   WiFi.mode(WIFI_OFF);
   unsigned long wifi_end = micros();
   Serial.print("Wifi duration: ");
-  Serial.print(wifi_start - wifi_end );
+  Serial.print(wifi_end - wifi_start );
   Serial.print("\n");
 
   Serial.print("Sensor duration: ");

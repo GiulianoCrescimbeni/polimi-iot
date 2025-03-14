@@ -17,7 +17,7 @@ print("the power requested to boot is [mW]:", boot_up_power)
 
 ###------WIFI-POWER
 wifi_power_= 776 * 20 - boot_up_power #value in [mW] extracted from the csv file "deep_sleep"
-wifi_period= 195650 /1000000 # value in [s] taken from the code simulation
+wifi_period= 188650 /1000000 # value in [s] taken from the code simulation
 
 ###-----SENSOR POWER
 sensor_read_power= 466 *20 #value in [mW] extracted from the csv file "sensor_read"
@@ -30,7 +30,7 @@ sensor_idle_period=  252 / 1000000 # value in [s] taken from the code simulation
 transmission_power= 1239 * 20 #value in [mW] extracted from the csv file "transmission_power"
 transmission_period=  252 / 1000000 # value in [s] taken from the code simulation
 
-total_working_time= wifi_period
+total_working_time=  sensor_read_period + wifi_period
 
 
 deep_sleep_energy_consumption   = sleep_mode_power_ * personal_duty_cycle

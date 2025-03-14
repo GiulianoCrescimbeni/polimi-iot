@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 #values taken from the previous file
 
+
 ####------ DEEP SLEEP TIMES
 personal_duty_cycle = 3+5; #personal_code= 107124(03)
 sleep_mode_power_= 59.5 * 20 #value in [mW] extracted from the csv file "deep_sleep"
@@ -19,7 +20,7 @@ print("the power requested to boot is [mW]:", boot_up_power)
 
 ###------WIFI-POWER
 wifi_power_= 776 * 20 - boot_up_power #value in [mW] extracted from the csv file "deep_sleep"
-wifi_period= 195650 /1000000 # value in [s] taken from the code simulation
+wifi_period= 188650 /1000000 # value in [s] taken from the code simulation
 
 ###-----SENSOR POWER
 sensor_read_power= 466 *20 #value in [mW] extracted from the csv file "sensor_read"
@@ -30,10 +31,10 @@ sensor_idle_period=  252 / 1000000 # value in [s] taken from the code simulation
 
 ###---- TRANSMISSION POWER
 transmission_power= 1239 * 20 #value in [mW] extracted from the csv file "transmission_power"
-transmission_power_low= 800*20 # value setted to 2dbm for energy constraints purposes
+transmission_power_low = 800* 20
 transmission_period=  252 / 1000000 # value in [s] taken from the code simulation
 
-total_working_time= wifi_period
+total_working_time=  sensor_read_period + wifi_period
 
 
 #deep_sleep_energy_consumption   = sleep_mode_power_ * personal_duty_cycle
