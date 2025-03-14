@@ -23,9 +23,9 @@ void setup() {
   pinMode(ECHO_PIN, INPUT);
 
   Serial.println("Starting...");
-
+  unsigned long wifi_start = micros();
   WiFi.mode(WIFI_STA);
-
+  
   esp_now_init();
   esp_now_register_send_cb(OnDataSent);
 
@@ -35,6 +35,7 @@ void setup() {
 
   esp_now_add_peer(&peerInfo);
 
+  unsigned long sensor_start = micros();
   // Starting the sampling request
   digitalWrite(TRIG_PIN, HIGH);
   delayMicroseconds(10);
@@ -42,6 +43,7 @@ void setup() {
 
   // Read the result
   int duration = pulseIn(ECHO_PIN, HIGH, 30000);
+  unsigned long sensor_end = micros();
   // Distance conversion in centimeters
   duration= duration / 58;
   
@@ -51,10 +53,24 @@ void setup() {
   // Create the message to send
   String snd_msg = (duration < 51) ? "OCCUPIED\0" : "FREE\0";
   
+  unsigned long transmission_start = micros();
   esp_now_send(broadcast_addr, (uint8_t*) snd_msg.c_str(), snd_msg.length() + 1);
+  unsigned long transmission_end = micros();
+
+  Serial.print("Sensor duration: ");
+  Serial.print(sensor_end - sensor_start);
+  Serial.print("\n");
+  Serial.print("Transmission duration: ");
+  Serial.print(transmission_end - transmission_start);
+  Serial.print("\n");
 
   int personal_duty_cycle= 3+5; // Personal Code = 107124(03)
   esp_sleep_enable_timer_wakeup(personal_duty_cycle * uS_TO_S);
+  unsigned long wifi_end = micros();
+  Serial.print("Wifi duration: ");
+  Serial.print(wifi_end - wifi_start );
+  Serial.print("\n");
+
   esp_deep_sleep_start();
 
 }
