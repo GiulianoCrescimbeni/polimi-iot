@@ -79,7 +79,7 @@ index_eval = np.where(x == x_eval)[0]
 duration = total_cycles * total_duty_cycle_sec
 print("Total duration of the system before:", 13127.949814597458)
 print("Total duration of the system after:", y[index_eval])
-print("'%' improvement:",( 13127.949814597458 / y[0])*100 )
+print("'%' improvement:",( y[x_eval] /13127.949814597458)*100 )
 
 
 

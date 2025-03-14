@@ -23,6 +23,26 @@ void setup() {
   pinMode(ECHO_PIN, INPUT);
 
   Serial.println("Starting...");
+  
+
+  unsigned long sensor_start = micros();
+  // Starting the sampling request
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  // Read the result
+  int duration = pulseIn(ECHO_PIN, HIGH, 25000);
+  unsigned long sensor_end = micros();
+  // Distance conversion in centimeters
+  duration= duration / 58;
+  
+  // Debug info
+  //Serial.println("Distance in CM: ", duration);
+
+
+  // Create the message to send
+  String snd_msg = (duration < 51) ? "OCCUPIED\0" : "FREE\0";
   unsigned long wifi_start = micros();
   WiFi.mode(WIFI_STA);
   
@@ -34,28 +54,14 @@ void setup() {
   peerInfo.encrypt= 0;
 
   esp_now_add_peer(&peerInfo);
-
-  unsigned long sensor_start = micros();
-  // Starting the sampling request
-  digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-
-  // Read the result
-  int duration = pulseIn(ECHO_PIN, HIGH, 30000);
-  unsigned long sensor_end = micros();
-  // Distance conversion in centimeters
-  duration= duration / 58;
-  
-  // Debug info
-  //Serial.println("Distance in CM: ", duration);
-
-  // Create the message to send
-  String snd_msg = (duration < 51) ? "OCCUPIED\0" : "FREE\0";
-  
   unsigned long transmission_start = micros();
   esp_now_send(broadcast_addr, (uint8_t*) snd_msg.c_str(), snd_msg.length() + 1);
   unsigned long transmission_end = micros();
+  WiFi.mode(WIFI_OFF);
+  unsigned long wifi_end = micros();
+  Serial.print("Wifi duration: ");
+  Serial.print(wifi_start - wifi_end );
+  Serial.print("\n");
 
   Serial.print("Sensor duration: ");
   Serial.print(sensor_end - sensor_start);
@@ -66,10 +72,7 @@ void setup() {
 
   int personal_duty_cycle= 3+5; // Personal Code = 107124(03)
   esp_sleep_enable_timer_wakeup(personal_duty_cycle * uS_TO_S);
-  unsigned long wifi_end = micros();
-  Serial.print("Wifi duration: ");
-  Serial.print(wifi_end - wifi_start );
-  Serial.print("\n");
+
 
   esp_deep_sleep_start();
 
