@@ -59,10 +59,13 @@ void setup() {
   unsigned long transmission_end = micros();
   WiFi.mode(WIFI_OFF);
   unsigned long wifi_end = micros();
+  unsigned long sensor_idle_end = micros();
   Serial.print("Wifi duration: ");
   Serial.print(wifi_end - wifi_start );
   Serial.print("\n");
-
+  Serial.print("Sensor duration in idle: ");
+  Serial.print(sensor_idle_end - sensor_end);
+  Serial.print("\n");
   Serial.print("Sensor duration: ");
   Serial.print(sensor_end - sensor_start);
   Serial.print("\n");
