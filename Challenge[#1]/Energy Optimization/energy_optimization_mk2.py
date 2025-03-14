@@ -44,8 +44,8 @@ boot_up_energy_consumption= boot_up_power * total_working_time
 
 #EXPLANATION-----
 # In order to improve the energy consumption, the only possible variables capable to
-# be manipulated are the sleep time, transmission power and wifi activation. In order to find the best possible value, we try
-# every value in a 8 -> 3600 s with a step of 0.5 sec each
+# be manipulated are the sleep time, transmission power and wifi activation time. In order to find the best possible value, we try
+# every value in a 8 -> 3600 s with a step of 0.5 sec each for the sleep time
 
 # Creazione dell'array x e y
 x = np.arange(8, 3600.5, 0.5)
