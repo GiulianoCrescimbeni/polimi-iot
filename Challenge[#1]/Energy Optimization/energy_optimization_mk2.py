@@ -30,6 +30,7 @@ sensor_idle_period=  252 / 1000000 # value in [s] taken from the code simulation
 
 ###---- TRANSMISSION POWER
 transmission_power= 1239 * 20 #value in [mW] extracted from the csv file "transmission_power"
+transmission_power_low= 800*20 # value setted to 2dbm for energy constraints purposes
 transmission_period=  252 / 1000000 # value in [s] taken from the code simulation
 
 total_working_time= wifi_period
@@ -37,7 +38,7 @@ total_working_time= wifi_period
 
 #deep_sleep_energy_consumption   = sleep_mode_power_ * personal_duty_cycle
 sensor_total_energy_consumption  = sensor_read_power * sensor_read_period + sensor_idle_period *sensor_idle_power
-transmission_energy_consumption = transmission_power * transmission_period
+transmission_energy_consumption = transmission_power_low * transmission_period
 boot_up_energy_consumption= boot_up_power * total_working_time
 
 
@@ -76,6 +77,11 @@ x_eval= 500
 print("Sleep time optimized: ", x_eval)
 index_eval = np.where(x == x_eval)[0]
 duration = total_cycles * total_duty_cycle_sec
-print("Total duration of the system before:", y[0])
+print("Total duration of the system before:", 13127.949814597458)
 print("Total duration of the system after:", y[index_eval])
-print("'%' improvement:",(y[index_eval] / y[0])*100 )
+print("'%' improvement:",( 13127.949814597458 / y[0])*100 )
+
+
+
+
+duration_maxed_battery= duration *2
