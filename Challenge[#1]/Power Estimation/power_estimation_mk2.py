@@ -12,7 +12,7 @@ idle_power= 313 * 20 #value in [mW] extracted from the csv file "deep_sleep"
 idle_period= 190432 / 1000000
 
 ###------WIFI-POWER
-wifi_power= 776 * 20 - idle_power #value in [mW] extracted from the csv file "deep_sleep"
+wifi_power= 776 * 20 #value in [mW] extracted from the csv file "deep_sleep"
 wifi_period= 197867 /1000000 # value in [s] taken from the code simulation
 
 ###-----SENSOR POWER
