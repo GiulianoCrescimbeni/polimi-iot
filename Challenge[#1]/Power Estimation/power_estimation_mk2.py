@@ -5,22 +5,22 @@ print("SECOND VERSION\n")
 
 ####------ DEEP SLEEP TIMES
 personal_duty_cycle = 3+5; #personal_code= 107124(03)
-sleep_mode_power_= 59.5 * 20 #value in [mW] extracted from the csv file "deep_sleep"
+sleep_mode_power_= 59.5 #value in [mW] extracted from the csv file "deep_sleep"
 
 ###------IDLE POWER
-idle_power= 313 * 20 #value in [mW] extracted from the csv file "deep_sleep"
+idle_power= 313  #value in [mW] extracted from the csv file "deep_sleep"
 idle_period= 190432 / 1000000
 
 ###------WIFI-POWER
-wifi_power= 776 * 20 #value in [mW] extracted from the csv file "deep_sleep"
+wifi_power= 776  #value in [mW] extracted from the csv file "deep_sleep"
 wifi_period= 197867 /1000000 # value in [s] taken from the code simulation
 
 ###-----SENSOR POWER
-sensor_read_power= 466 *20 #value in [mW] extracted from the csv file "sensor_read"
+sensor_read_power= 466 #value in [mW] extracted from the csv file "sensor_read"
 sensor_read_period = 4053 / 1000000 #value in [s] taken from the code simulation
 
 ###---- TRANSMISSION POWER
-transmission_power= 1239 * 20 #value in [mW] extracted from the csv file "transmission_power"
+transmission_power= 1239 #value in [mW] extracted from the csv file "transmission_power"
 transmission_period=  64 / 1000000 # value in [s] taken from the code simulation
 
 
