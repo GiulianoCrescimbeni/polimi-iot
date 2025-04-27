@@ -1,0 +1,517 @@
+[
+    {
+        "id": "d602c11826aaefd5",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "80076520c953cbfd",
+        "type": "inject",
+        "z": "d602c11826aaefd5",
+        "name": "Injector",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "5",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "challenge3/id_generator",
+        "payload": "",
+        "payloadType": "date",
+        "x": 520,
+        "y": 140,
+        "wires": [
+            [
+                "126802d3a7335aec"
+            ]
+        ]
+    },
+    {
+        "id": "8a58f383504a021e",
+        "type": "mqtt out",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "topic": "challenge3/id_generator",
+        "qos": "0",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "03f4f39463e2cc95",
+        "x": 1150,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "126802d3a7335aec",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "Id_generator",
+        "func": "msg.payload = {\n    id: Math.floor(Math.random() * 30001),\n    timestamp: Date.now()\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 730,
+        "y": 140,
+        "wires": [
+            [
+                "37aaae346279d2b2",
+                "8a58f383504a021e"
+            ]
+        ]
+    },
+    {
+        "id": "37aaae346279d2b2",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "parser",
+        "func": "// Recupera il contatore salvato nel contesto del nodo (persistente)\ncontext.count = (context.count || 0) + 1;\n\n// Estrai i dati dal messaggio originale\nconst id = msg.payload.id;\nconst timestamp = msg.payload.timestamp;\n\n// Crea la riga CSV nel formato \"N,ID,TIMESTAMP\"\nconst row = `${context.count},${id},${timestamp}`;\n\n// Prepara il messaggio per scrivere nel file\nmsg.payload = row;\nmsg.filename = \"/Users/giulianocrescimbeni/Desktop/id_log.csv\";\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 930,
+        "y": 200,
+        "wires": [
+            [
+                "ef03f6c06c6fb91b"
+            ]
+        ]
+    },
+    {
+        "id": "ef03f6c06c6fb91b",
+        "type": "file",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "filename": "filename",
+        "filenameType": "msg",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 1140,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "64798bfe51ca7811",
+        "type": "mqtt in",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "topic": "challenge3/id_generator",
+        "qos": "0",
+        "datatype": "auto-detect",
+        "broker": "03f4f39463e2cc95",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 330,
+        "y": 300,
+        "wires": [
+            [
+                "06a4aa3d079d24ba"
+            ]
+        ]
+    },
+    {
+        "id": "efa0fdf51343e6a4",
+        "type": "file in",
+        "z": "d602c11826aaefd5",
+        "name": "reader",
+        "filename": "filename",
+        "filenameType": "msg",
+        "format": "utf8",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": true,
+        "x": 830,
+        "y": 360,
+        "wires": [
+            [
+                "14dcf59f56da8966"
+            ]
+        ]
+    },
+    {
+        "id": "db13af66fc35ea6e",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "publish_handler",
+        "func": "const id = msg.id;\nconst N = msg.N;\nconst now = new Date().toISOString();\n\nconst frame = parseInt(msg.payload[\"No.\"]);\nconst protocol = msg.payload[\"Protocol\"];\nconst info = msg.payload[\"Info\"];\nconst payloadField = msg.payload[\"Payload\"];\n\nif (\n    frame === N &&\n    protocol === \"MQTT\" &&\n    typeof info === \"string\" &&\n    info.includes(\"Publish Message\") &&\n    typeof payloadField === \"string\"\n) {\n    node.warn(\"Condizioni soddisfatte: \" + info);\n\n    const topicMatches = [...info.matchAll(/\\[(.*?)\\]/g)].map(m => m[1]);\n    const payloadMatches = [...payloadField.matchAll(/\\{[^}]+\\}/g)].map(m => m[0]);\n\n    const count = Math.min(topicMatches.length, payloadMatches.length);\n\n    for (let i = 0; i < count; i++) {\n        const cleanPayload = payloadMatches[i].replace(/\"\"/g, '\"');\n\n        try {\n            const structuredPayload = {\n                timestamp: now,\n                id: N,\n                topic: topicMatches[i],\n                payload: JSON.parse(cleanPayload)\n            };\n\n            const outMsg = {\n                topic: topicMatches[i],\n                payload: JSON.stringify(structuredPayload),\n                qos: 0\n            };\n\n            node.send(outMsg);\n        } catch (err) {\n            node.warn(\"Errore parsing JSON payload: \" + err);\n        }\n    }\n}\n\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 900,
+        "y": 440,
+        "wires": [
+            [
+                "60d6f8a73c50a9ee"
+            ]
+        ]
+    },
+    {
+        "id": "60d6f8a73c50a9ee",
+        "type": "delay",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "pauseType": "rate",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "4",
+        "nbRateUnits": "1",
+        "rateUnits": "minute",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1120,
+        "y": 440,
+        "wires": [
+            [
+                "678866926023dae2",
+                "05c393bb3b4b56fd"
+            ]
+        ]
+    },
+    {
+        "id": "678866926023dae2",
+        "type": "mqtt out",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "03f4f39463e2cc95",
+        "x": 1310,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "d51eeaf64e57052c",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "N_calculator",
+        "func": "const id = msg.payload.id;\nconst N = id % 7711;\n\nmsg.N = N;\nmsg.filename = \"/Users/giulianocrescimbeni/Desktop/challenge3.csv\";\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 360,
+        "wires": [
+            [
+                "efa0fdf51343e6a4"
+            ]
+        ]
+    },
+    {
+        "id": "01cb02f1703d52ca",
+        "type": "ui_chart",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "group": "11ce835a99592fc2",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "label": "Temperature",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "",
+        "ymax": "",
+        "removeOlder": "30",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1770,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "05c393bb3b4b56fd",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "filter_pubs",
+        "func": "// Parse del payload se arriva come stringa JSON\nif (typeof msg.payload === \"string\") {\n    try {\n        msg.payload = JSON.parse(msg.payload);\n    } catch (err) {\n        node.warn(\"Errore parsing JSON string: \" + err);\n        return null;\n    }\n}\n\nconst data = msg.payload;\n\nif (!data || !data.payload || !data.topic) {\n    node.warn(\"Payload malformato\");\n    return null;\n}\n\nconst sensor = data.payload;\nconst topic = data.topic;\n\nconst isTemperature = (sensor.type === \"temperature\");\nconst isFahrenheit = (sensor.unit === \"F\");\nconst isRangeValid = Array.isArray(sensor.range) && sensor.range.length === 2;\n\nif (isTemperature && isFahrenheit && isRangeValid) {\n    const min = Number(sensor.range[0]);\n    const max = Number(sensor.range[1]);\n\n    \n\n    return msg;\n} else {\n    //node.warn(\"Condizioni non soddisfatte: tipo=\" + sensor.type + \", unit=\" + sensor.unit);\n}\n\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1110,
+        "y": 520,
+        "wires": [
+            [
+                "26da8a05444da577"
+            ]
+        ]
+    },
+    {
+        "id": "26da8a05444da577",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "parser",
+        "func": "// Recupera il contatore salvato nel contesto del nodo (persistente)\ncontext.count_1 = (context.count_1 || 0) + 1;\n\nconst id = context.count_1;\n\n// Prendi i dati dal payload interno\nconst sensor = msg.payload.payload;\n\nconst long = sensor.long;\nconst lat = sensor.lat;\nconst type = sensor.type;\nconst unit = sensor.unit;\nconst description = sensor.description;\n\n// Calcola media range\nlet mean_value = \"NA\";\n\nif (Array.isArray(sensor.range) && sensor.range.length === 2) {\n    mean_value = (sensor.range[0] + sensor.range[1]) / 2;\n}\n\n// Crea la riga CSV\nconst row = `${id},${long},${lat},${mean_value},${type},${unit},${description}`;\n\n// Prepara per scrittura su file\nmsg.payload = row;\nmsg.filename = \"/Users/giulianocrescimbeni/Desktop/filtered_pubs.csv\";\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1310,
+        "y": 520,
+        "wires": [
+            [
+                "0d7b345b8879967f",
+                "12a314c6a4870cd4"
+            ]
+        ]
+    },
+    {
+        "id": "0d7b345b8879967f",
+        "type": "file",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "filename": "filename",
+        "filenameType": "msg",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 1560,
+        "y": 620,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "12a314c6a4870cd4",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "temperature_payload",
+        "func": "const fields = msg.payload.split(\",\");\n\n// Verifica che ci siano almeno 4 campi\nif (fields.length >= 4) {\n    msg.payload = parseFloat(fields[3]);  // 4° campo = indice 3\n    return msg;\n}\n\nreturn null; ",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1560,
+        "y": 520,
+        "wires": [
+            [
+                "01cb02f1703d52ca"
+            ]
+        ]
+    },
+    {
+        "id": "10c43fba9cd76440",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "ack_handler",
+        "func": "const id = msg.id;\nconst N = msg.N;\nconst now = new Date().toISOString();\n\n// Accesso corretto ai campi dopo csv node\nconst frame = parseInt(msg.payload[\"No.\"]);\nconst protocol = msg.payload[\"Protocol\"];\nconst info = msg.payload[\"Info\"];\n\nif (\n    frame === N &&\n    protocol === \"MQTT\" &&\n    typeof info === \"string\" &&\n    (\n        info.includes(\"Publish Ack\") ||\n        info.includes(\"Connect Ack\") ||\n        info.includes(\"Sub Ack\") ||\n        info.includes(\"Unsub Ack\") ||\n        info.includes(\"Subscribe Ack\")\n    )\n) {\n    context.ack_count = (context.ack_count || 0) + 1;\n    node.warn(\"Condizioni soddisfatte ack\");\n\n    // Rimuove eventuali (id=1) o simili\n    const msgType = info.replace(/\\s*\\(.*?\\)\\s*$/, '').trim();\n    const row = `${context.ack_count},${Date.now()},${N},${msgType}`;\n\n    // CSV per log\n    msg.payload = row;\n    msg.filename = \"/Users/giulianocrescimbeni/Desktop/ack_log.csv\";\n\n    // ThingSpeak update\n    const apiKey = \"1FWM4V16E65LU3SZ\";\n    msg.method = \"GET\";\n    msg.url = `https://api.thingspeak.com/update?api_key=${apiKey}&field1=${context.ack_count}`;\n\n    return msg;\n}\n\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 540,
+        "wires": [
+            [
+                "a92504e94dea8032",
+                "b0497a7facc8f24f"
+            ]
+        ]
+    },
+    {
+        "id": "a92504e94dea8032",
+        "type": "file",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "filename": "filename",
+        "filenameType": "msg",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "false",
+        "encoding": "utf8",
+        "x": 880,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0497a7facc8f24f",
+        "type": "http request",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "method": "use",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 910,
+        "y": 600,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "06a4aa3d079d24ba",
+        "type": "function",
+        "z": "d602c11826aaefd5",
+        "name": "limiter_checker",
+        "func": "\ncontext.limiter = (context.limiter || 0) + 1;\nif (context.limiter >= 81){\n    return null;\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 300,
+        "wires": [
+            [
+                "d51eeaf64e57052c"
+            ]
+        ]
+    },
+    {
+        "id": "14dcf59f56da8966",
+        "type": "csv",
+        "z": "d602c11826aaefd5",
+        "name": "",
+        "spec": "rfc",
+        "sep": ";",
+        "hdrin": true,
+        "hdrout": "none",
+        "multi": "one",
+        "ret": "\\r\\n",
+        "temp": "",
+        "skip": "0",
+        "strings": true,
+        "include_empty_strings": "",
+        "include_null_values": "",
+        "x": 710,
+        "y": 440,
+        "wires": [
+            [
+                "db13af66fc35ea6e",
+                "10c43fba9cd76440"
+            ]
+        ]
+    },
+    {
+        "id": "03f4f39463e2cc95",
+        "type": "mqtt-broker",
+        "name": "Local-Broker",
+        "broker": "localhost",
+        "port": "1884",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "11ce835a99592fc2",
+        "type": "ui_group",
+        "name": "Fahrenheit_Display",
+        "tab": "deed120a6da17224",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "deed120a6da17224",
+        "type": "ui_tab",
+        "name": "Home",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
